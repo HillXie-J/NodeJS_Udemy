@@ -7,14 +7,75 @@ mongoose.connect('mongodb://localhost/playground')
 
 const courseSchema = new mongoose.Schema(
     {
-        name: String,
+        name: {
+            type: String,
+            required: true,
+            minlenght: 5,
+            maxlength: 255
+        },
+        category: {
+            type: String,
+            required: true,
+            enum: ['web', 'mobile', 'network']
+        },
         author: String,
-        tags: [String],
+        tags: {
+            type: [String],
+            required: true,
+            validate: {
+                validator(v){
+
+/*                     const result = true;
+
+                     setTimeout(() => {
+                        const result = v.length > 0;
+
+
+                    }, 2000);   */
+/* 
+                    return Promise.resolve(
+                        
+                        () => {
+                            return false;
+                        }
+                        
+                        
+                        ); */
+
+                    const promise = new Promise(
+                        (resolve, reject) => {
+
+
+                            setTimeout(() => {
+                                const result = v.length > 0;
+                                resolve(result);
+        
+                            }, 4000);
+                            
+
+                    });
+
+                    return promise;
+
+                },
+                message: 'A course should have at least one tag.'
+            }
+        },
         date: { type: Date, default: Date.now },
-        isPublished: Boolean
+        isPublished: Boolean,
+        price: {
+            type: Number,
+            required: function () {
+                return this.isPublished;
+            },
+            min: 10,
+            max: 200
+        }
     }
 
 );
+
+
 
 const Course = mongoose.model('Course', courseSchema);
 
@@ -24,20 +85,26 @@ async function createCourse() {
     const course = new Course({
         name: 'Angular Course',
         author: 'Mosh',
-        tags: ['angular', 'frontend'],
-        isPublished: true
+         tags: ['angular', 'frontend'],
+        // tags:[],
+        // tags: null,
+        isPublished: true,
+        category: '_',
+        price: 15
     });
 
+    try {
+        const result = await course.save();
 
-
-    const result = await course.save();
-
-    console.log(result);
+        console.log(result);
+    } catch (ex) {
+        console.log(ex.message);
+    }
 
 }
 
 
-//createCourse();
+createCourse();
 
 async function getCourses() {
 
@@ -91,10 +158,10 @@ async function updateCourse(id) {
 async function removeCourse(id) {
 
 
-/*     const result = await Course.deleteOne(
-        {_id: id}
-    );
- */
+    /*     const result = await Course.deleteOne(
+            {_id: id}
+        );
+     */
 
     const result = await Course.findByIdAndDelete(id);
 
@@ -102,7 +169,7 @@ async function removeCourse(id) {
 
 }
 
-removeCourse('62c72a378b5261a63c02c85d');
+// removeCourse('62c72a378b5261a63c02c85d');
 
 // updateCourse('62c72a378b5261a63c02c85d');
 
